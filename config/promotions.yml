@@ -1,0 +1,10 @@
+promotions:
+  product_ids: [1, 2, 4]
+
+  products_with_discounts:
+    1: 30
+    2: 25
+    4: 15
+
+  default_discount: 20
+  enabled: true

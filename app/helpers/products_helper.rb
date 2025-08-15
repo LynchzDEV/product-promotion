@@ -1,28 +1,52 @@
 module ProductsHelper
-  PRODUCTS_ON_PROMOTION = [ 1, 2, 4 ]
+  def promotion_config
+    @promotion_config ||= begin
+      config_file = Rails.root.join("config", "promotions.yml")
+      if File.exist?(config_file)
+        YAML.load_file(config_file)["promotions"]
+      else
+        { "enabled" => false, "product_ids" => [], "default_discount" => 20 }
+      end
+    end
+  end
 
   def on_promotion?(product)
-    PRODUCTS_ON_PROMOTION.include?(product.id)
+    return false unless promotion_config["enabled"]
+
+    if promotion_config["product_ids"]
+      promotion_config["product_ids"].include?(product.id)
+    elsif promotion_config["products_with_discounts"]
+      promotion_config["products_with_discounts"].key?(product.id)
+    else
+      false
+    end
   end
 
   def products_on_promotion_ids
-    PRODUCTS_ON_PROMOTION
-  end
-
-  def promotion_price(product, discount_percentage = 20)
-    return nil unless product.price.present?
-
-    discounted_price = product.price * (1 - discount_percentage.to_f / 100)
-    discounted_price.round(2)
+    if promotion_config["product_ids"]
+      promotion_config["product_ids"]
+    elsif promotion_config["products_with_discounts"]
+      promotion_config["products_with_discounts"].keys
+    else
+      []
+    end
   end
 
   def discount_for_product(product)
-    case product.id
-    when 1 then 30
-    when 2 then 25
-    when 4 then 15
-    else 20
+    if promotion_config["products_with_discounts"] &&
+       promotion_config["products_with_discounts"][product.id]
+      promotion_config["products_with_discounts"][product.id]
+    else
+      promotion_config["default_discount"] || 20
     end
+  end
+
+  def promotion_price(product, custom_discount = nil)
+    return nil unless product.price.present?
+
+    discount = custom_discount || promotion_config["default_discount"] || 20
+    discounted_price = product.price * (1 - discount.to_f / 100)
+    discounted_price.round(2)
   end
 
   def promotion_price_custom(product)
@@ -31,5 +55,10 @@ module ProductsHelper
     discount = discount_for_product(product)
     discounted_price = product.price * (1 - discount.to_f / 100)
     discounted_price.round(2)
+  end
+
+  def reload_promotion_config!
+    @promotion_config = nil
+    promotion_config
   end
 end
