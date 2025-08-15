@@ -1,0 +1,27 @@
+<div class="product-price-container" data-product-id="<%= product.id %>">
+  <% if on_promotion?(product) %>
+    <% discount = discount_for_product(product) %>
+
+    <div class="inline-block bg-red-500 text-white px-2 py-1 rounded text-xs font-bold mb-2">
+      SALE -<%= discount %>%
+    </div>
+
+    <div class="flex items-center gap-3">
+      <span class="line-through text-gray-500">
+        $<%= number_with_precision(product.price, precision: 2) %>
+      </span>
+
+      <span class="text-red-600 font-bold text-xl">
+        $<%= number_with_precision(promotion_price_custom(product), precision: 2) %>
+      </span>
+
+      <span class="bg-red-100 text-red-600 px-2 py-1 rounded text-sm">
+        -<%= discount %>%
+      </span>
+    </div>
+  <% else %>
+    <div class="text-gray-900 font-semibold text-xl">
+      $<%= number_with_precision(product.price, precision: 2) %>
+    </div>
+  <% end %>
+</div>
